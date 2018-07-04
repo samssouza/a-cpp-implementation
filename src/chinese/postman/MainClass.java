@@ -1,8 +1,5 @@
 package chinese.postman;
 
-import java.util.HashMap;
-import java.util.Map;
-import javafx.util.Pair;
 
 public class MainClass {
 
@@ -10,7 +7,6 @@ public class MainClass {
      
         Graph graph = new Graph();
         graph.ReadGraph();
-        
         new Solver().Solve(graph);
     }
     

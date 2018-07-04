@@ -1,6 +1,5 @@
 package chinese.postman;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,10 +9,9 @@ import javafx.util.Pair;
 
 public class Graph {
 
-   
     private String[] vertices;
     private int[][] costMatrix;
-    
+
     public String[] getVertices() {
         return vertices;
     }
@@ -55,15 +53,15 @@ public class Graph {
 
         for (String edge : edgesArray) {
             edge = edge.replaceAll("(\\(|\\))", "");
-            
+
             String v1 = edge.split(",")[0];
             String v2 = edge.split(",")[1];
             int weight = Integer.valueOf(edge.split(",")[2].trim());
-                    
+
             vSet.add(v1);
             vSet.add(v2);
-            costsMap.put(new Pair<String, String>(v1,v2), weight); 
-            costsMap.put(new Pair<String, String>(v2,v1), weight); 
+            costsMap.put(new Pair<String, String>(v1, v2), weight);
+            costsMap.put(new Pair<String, String>(v2, v1), weight);
 
         }
 
@@ -72,21 +70,26 @@ public class Graph {
 
         for (int i = 0; i < gVertices.length; i++) {
             for (int j = 0; j < gVertices.length; j++) {
-                int cost;
-                cost = costsMap.getOrDefault(new Pair<String, String>(
-                        gVertices[i], gVertices[j]), Integer.MAX_VALUE);
 
-                gCosts[i][j] = cost;
-               
+                if (i == j) {
+                    gCosts[i][j] = 0;
+
+                } else {
+
+                    gCosts[i][j] = costsMap.getOrDefault(new Pair<String, String>(
+                            gVertices[i], gVertices[j]), Integer.MAX_VALUE);
+
+                }
+
             }
         }
-
-        System.out.println(Arrays.toString(gVertices));
-        System.out.println(Arrays.deepToString(gCosts));
+        
+        System.out.println("Graph Vertices: "+Arrays.toString(gVertices));
+        System.out.println("Cost Matrix: " +Arrays.deepToString(gCosts));
 
         this.vertices = gVertices;
         this.costMatrix = gCosts;
-    
+
     }
-    
+
 }
