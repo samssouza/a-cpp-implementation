@@ -8,8 +8,10 @@ public class MainClass {
 
     public static void main(String[] args) {
      
-        new Graph().ReadGraph();
+        Graph graph = new Graph();
+        graph.ReadGraph();
         
+        new Solver().Solve(graph);
     }
     
 }

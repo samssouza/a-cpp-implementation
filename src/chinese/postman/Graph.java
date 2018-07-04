@@ -10,8 +10,25 @@ import javafx.util.Pair;
 
 public class Graph {
 
+   
     private String[] vertices;
     private int[][] costMatrix;
+    
+    public String[] getVertices() {
+        return vertices;
+    }
+
+    public void setVertices(String[] vertices) {
+        this.vertices = vertices;
+    }
+
+    public int[][] getCostMatrix() {
+        return costMatrix;
+    }
+
+    public void setCostMatrix(int[][] costMatrix) {
+        this.costMatrix = costMatrix;
+    }
 
     public void ReadGraph() {
         System.out.println("Type Edges of Graph Separated by SemiColon.");
