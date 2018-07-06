@@ -1,13 +1,24 @@
 package chinese.postman;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import javafx.util.Pair;
+import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
 
 public class Solver {
 
     public void Solve(Graph g) {
+
         //Find odd vertices
-        ArrayList<Integer> oddVertices = FindOddVertices(g);
+        HashSet<Integer> oddVertices = FindOddVertices(g);
         System.out.println("Odd Vertices: " + Arrays.toString(oddVertices.toArray()));
         //Run FloydWarshall
         Object[] results = FloydWarshall(g);
@@ -15,18 +26,25 @@ public class Solver {
         int[][] next = (int[][]) results[1];
         System.out.println("Distance Matrix: " + Arrays.deepToString(distance));
         System.out.println("Next Matrix: " + Arrays.deepToString(next));
-        //List all possible pairings
-        listAllPairings();
-        //Find Perfect Matching with lowest value
-        //Add edges to Graph
-        //Run Hierholzer
+        //Find edges of complete graph with oddVertices
+        ArrayList<Edge> edges = getAllEdges(oddVertices);
+        //Find all matchings with edges
+        LinkedList<Edge[]> matchings = new LinkedList<>();
+        addMatchings(matchings, edges, new Edge[oddVertices.size()/ 2], oddVertices.size()/ 2);
+        System.out.println("All Odd Vertices Matchs: " + Arrays.deepToString(matchings.toArray()));
+        //Finds match with minimum summed weight
+        Edge[] bestMatch = findPerfectMatch(matchings, distance);
+        System.out.println("Best Odd Vertices match: "+ Arrays.toString(bestMatch));
+        //Add of best match to graph
+        //Run Hierholzer and genereta cicle
+
     }
 
-    public ArrayList<Integer> FindOddVertices(Graph g) {
+    public HashSet<Integer> FindOddVertices(Graph g) {
 
         int n = g.getVertices().length;
         int[][] costMatrix = g.getCostMatrix();
-        ArrayList<Integer> oddVertices = new ArrayList<>();
+        HashSet<Integer> oddVertices = new HashSet<>();
 
         //Finds odd vertices
         for (int i = 0; i < n; i++) {
@@ -78,14 +96,134 @@ public class Solver {
         }
         return new Object[]{distance, next};
     }
-    
-    private void listAllPairings() {
+
+    private Edge[] findPerfectMatch(LinkedList<Edge[]> matchings, int [][] distance) {
         
+        Edge[] bestMatching = null;
+        int bestCost = Integer.MAX_VALUE;
+            
+        for (Edge[] match : matchings) {
+            int cost =0;
+            for (Edge edge : match) {
+                cost += distance[edge.init][edge.end];
+            }
+            if(cost < bestCost){
+                bestMatching = match;
+            }
+            
+        }
+        return bestMatching;
+
+    }
+    
+    ////Adds to matchings all matching  begin with  edgeSequence edges
+    //plus all matchings that can be generated with edges
+    private void addMatchings(LinkedList<Edge[]> matchings,
+            ArrayList<Edge> edges,
+            Edge[] edgesSequence,
+            int n) {
+
+        //Check if a sequence of edges(ex:(1,2)(0,3)) is already added as a match
+        //This also discarts isomorph matches ex: (1,2)(0,3) amd (0,3)(1,2)
+        if (edges.isEmpty()) {
+            List edgesSequenceCol = Arrays.asList(edgesSequence);
+       
+            for (Edge[] match : matchings) {
+                
+                if (Arrays.asList(match).containsAll(edgesSequenceCol)) {
+                    return;
+                }
+            }
+            matchings.add(Arrays.copyOf(edgesSequence, edgesSequence.length));
+        }
+
+        for (Edge edge1 : edges) {
+
+            ArrayList<Edge> newEdges = new ArrayList<>();
+            for (Edge edge2 : edges) {
+                if (edge2.toltallyDiferent(edge1)) {
+                    newEdges.add(edge2);
+                }
+            }
+            
+            edgesSequence[edgesSequence.length - n] = edge1;
+            addMatchings(matchings, newEdges, edgesSequence, n - 1);
+            
+        }
+    }
+    
+    private  ArrayList<Edge> getAllEdges(HashSet<Integer> oddVertices) {
+       
+        HashSet<Edge> edgesSet = new HashSet<>();
+
+        //Enumerates all graph edges
+        for (Integer v1 : oddVertices) {
+            for (Integer v2 : oddVertices) {
+
+                if (v1 == v2) {
+                    continue;
+                }
+
+                if (!edgesSet.contains(new Edge(v1, v2))
+                        && !edgesSet.contains(new Edge(v2, v1))) {
+
+                    edgesSet.add(new Edge(v1, v2));
+
+                }
+            }
+
+        }
+
+        return new ArrayList<>(edgesSet);
+
     }
     public void Hierholzer() {
         //Find eulerian circle
     }
 
-   
+    //This class represents undirected edges
+    private class Edge {
 
+        public int init;
+        public int end;
+
+        public Edge(int init, int end) {
+            this.init = init;
+            this.end = end;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!Edge.class.isInstance(obj)) {
+                return false;
+            }
+
+            Edge edg = (Edge) obj;
+            return (edg.init == this.init && edg.end == this.end)
+                    || (edg.init == this.end && edg.end == this.init);
+
+        }
+
+        public boolean toltallyDiferent(Edge edge) {
+            //Returns if edges have no vertex in common
+            return ((this.init != edge.init)
+                    && (this.end != edge.end)
+                    && (this.init != edge.end)
+                    && (this.end != edge.init));
+        }
+
+        @Override
+        public int hashCode() {
+            int[] parameters = new int[]{init, end};
+            Arrays.sort(parameters);
+            return Objects.hash(parameters[0], parameters[1]);
+        }
+
+        @Override
+        public String toString() {
+            return "(" + Integer.toString(init)
+                    + "," + Integer.toString(end) + ")";
+        }
+
+    }
 }

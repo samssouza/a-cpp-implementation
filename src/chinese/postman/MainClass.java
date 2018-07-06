@@ -1,6 +1,8 @@
 package chinese.postman;
 
 
+import javafx.util.Pair;
+
 public class MainClass {
 
     public static void main(String[] args) {
@@ -9,5 +11,9 @@ public class MainClass {
         graph.ReadGraph();
         new Solver().Solve(graph);
     }
-    
+        
+        
+        
+       
+      
 }
