@@ -1,20 +1,15 @@
 package chinese.postman;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import javafx.util.Pair;
-import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
 
 public class Solver {
-
+    public static int INFINITE = Integer.MAX_VALUE/2;
+    
     public void Solve(Graph g) {
 
         //Find odd vertices
@@ -35,14 +30,13 @@ public class Solver {
         //Finds match with minimum summed weight
         Edge[] bestMatch = findPerfectMatch(matchings, distance);
         System.out.println("Best Odd Vertices match: "+ Arrays.toString(bestMatch));
-        //Add of best match to graph
-        //Run Hierholzer and genereta cicle
-
+        addEdgesToGraph(g, bestMatch, distance);
+        Hierholzer(g);
     }
 
     public HashSet<Integer> FindOddVertices(Graph g) {
 
-        int n = g.getVertices().length;
+        int n = g.getOrder();
         int[][] costMatrix = g.getCostMatrix();
         HashSet<Integer> oddVertices = new HashSet<>();
 
@@ -50,7 +44,7 @@ public class Solver {
         for (int i = 0; i < n; i++) {
             int neighborsCount = 0;
             for (int j = 0; j < n; j++) {
-                if ((costMatrix[i][j] != Integer.MAX_VALUE)
+                if ((costMatrix[i][j] != INFINITE)
                         && (costMatrix[i][j] != 0)) {
                     neighborsCount += 1;
 
@@ -75,7 +69,7 @@ public class Solver {
             for (int j = 0; j < n; j++) {
                 distance[i][j] = g.getCostMatrix()[i][j];
                 if (g.getCostMatrix()[i][j] != 0
-                        && g.getCostMatrix()[i][j] != Integer.MAX_VALUE) {
+                        && g.getCostMatrix()[i][j] != INFINITE) {
                     next[i][j] = j;
                 }
             }
@@ -177,8 +171,21 @@ public class Solver {
         return new ArrayList<>(edgesSet);
 
     }
-    public void Hierholzer() {
-        //Find eulerian circle
+    private void addEdgesToGraph(Graph graph, Edge[] edges, int[][] distance) {
+        
+        for (Edge e: edges) {
+            graph.getCostMatrix()[e.init][e.end] = distance[e.init][e.end]; 
+        }
+    }
+    public void Hierholzer(Graph graph) {
+        int totalCost = 0;
+        for (int i = 0; i < graph.getOrder(); i++) {
+            for (int j = 0; j < graph.getOrder(); j++) {
+                if(INFINITE != graph.getCostMatrix()[i][j])
+                    totalCost += graph.getCostMatrix()[i][j];
+             }
+        }
+        System.out.println("Total Cost is: " + totalCost);
     }
 
     //This class represents undirected edges

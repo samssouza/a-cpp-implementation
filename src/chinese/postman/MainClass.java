@@ -10,7 +10,7 @@ public class MainClass {
         Graph graph = new Graph();
         graph.ReadGraph();
         new Solver().Solve(graph);
-    }
+     }
         
         
         
