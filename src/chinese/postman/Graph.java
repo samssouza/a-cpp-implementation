@@ -44,7 +44,7 @@ public class Graph {
         int[][] gCost = new int[n][n];
 
         for (int i = 0; i < n; i++) {
-            String[] costs = lines.get(i).split("\\s");
+            String[] costs = lines.get(i).split("\\s+");
             for (int j = 0; j < n; j++) {
                 if (i == j) {
                     gCost[i][j] = 0;
@@ -55,9 +55,9 @@ public class Graph {
                 }
             }
         }
-
+        
         System.out.println("Number of vertices: " + String.valueOf(n));
-        System.out.println("Cost Matrix:" + Arrays.deepToString(gCost));
+        System.out.print("Cost Matrix:\n" + Arrays.deepToString(gCost).replace('[', ' ').replace(',', ' ').replace(']', '\n'));
 
         this.costMatrix = gCost;
         this.order = n;
