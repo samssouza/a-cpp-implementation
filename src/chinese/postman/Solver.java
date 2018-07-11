@@ -1,239 +1,180 @@
-    package chinese.postman;
+package chinese.postman;
 
-    import java.util.ArrayList;
-    import java.util.Arrays;
-    import java.util.HashSet;
-    import java.util.LinkedList;
-    import java.util.List;
-    import java.util.Objects;
+import java.net.Inet4Address;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import org.omg.PortableInterceptor.INACTIVE;
 
-    public class Solver {
-        public static int INFINITE = Integer.MAX_VALUE/2;
+public class Solver {
 
-        public void Solve(Graph g) {
+    public static int INFINITE = Integer.MAX_VALUE / 2;
 
-            //Find odd vertices
-            HashSet<Integer> oddVertices = FindOddVertices(g);
-            System.out.println("Odd Vertices: " + Arrays.toString(oddVertices.toArray()));
-            //Run FloydWarshall
-            Object[] results = FloydWarshall(g);
-            int[][] distance = (int[][]) results[0];
-            int[][] next = (int[][]) results[1];
-            System.out.println("Distance Matrix: " + Arrays.deepToString(distance));
-            System.out.println("Next Matrix: " + Arrays.deepToString(next));
-            //Find edges of complete graph with oddVertices
-            ArrayList<Edge> edges = getAllEdges(oddVertices);
-            //Find all matchings with edges
-            LinkedList<Edge[]> matchings = new LinkedList<>();
-            addMatchings(matchings, edges, new Edge[oddVertices.size()/ 2], oddVertices.size()/ 2);
-            System.out.println("All Odd Vertices Matchs: " + Arrays.deepToString(matchings.toArray()).replace('[', ' ').replace(',', ' ').replace(']', '\n'));
-            //Finds match with minimum summed weight
-            Edge[] bestMatch = findPerfectMatch(matchings, distance);
-            System.out.println("Best Odd Vertices match: "+ Arrays.toString(bestMatch));
-            getCost(bestMatch, distance);    
-            Hierholzer(g , getCost(bestMatch, distance));
+    public void Solve(int[][] costMatrix) {
+
+        //Find odd vertices
+        LinkedList<Integer> oddVertices = FindOddVertices(costMatrix);
+        System.out.println("Odd Vertices: " + Arrays.toString(oddVertices.toArray()));
+        //Run FloydWarshall
+        Object[] results = FloydWarshall(costMatrix);
+        int[][] distance = (int[][]) results[0];
+        int[][] next = (int[][]) results[1];
+        System.out.println("Distance Matrix: " + Arrays.deepToString(distance));
+        System.out.println("Next Matrix: " + Arrays.deepToString(next));
+        //Find edges of complete graph with oddVertices
+        //ArrayList<Edge> edges = getAllEdges(oddVertices);
+        //Find all matchings with edges
+        LinkedList<LinkedList<Integer>> matchings = new LinkedList<>();
+        findAllMatchings(matchings, oddVertices, new LinkedList<>());
+        //Finds match with minimum summed weight
+        for (LinkedList<Integer> matching : matchings) {
+            System.out.print("Match: ");
+        
+            for (Integer integer : matching) {
+                System.out.print(integer);
+        
+            }
+            System.out.println("");
+        
         }
-
-        public HashSet<Integer> FindOddVertices(Graph g) {
-
-            int n = g.getOrder();
-            int[][] costMatrix = g.getCostMatrix();
-            HashSet<Integer> oddVertices = new HashSet<>();
-
-            //Finds odd vertices
-            for (int i = 0; i < n; i++) {
-                int neighborsCount = 0;
-                for (int j = 0; j < n; j++) {
-                    if ((costMatrix[i][j] != INFINITE)
-                            && (costMatrix[i][j] != 0)) {
-                        neighborsCount += 1;
-
-                    }
-                }
-                if (neighborsCount % 2 != 0) {
-                    oddVertices.add(i);
-                }
-            }
-            return oddVertices;
-
-        }
-
-        public Object[] FloydWarshall(Graph g) {
-            int n = g.getCostMatrix().length;
-            int[][] distance = new int[n][n];
-            //Maybe do path calculation separately
-            int[][] next = new int[n][n];
-
-            //Initialization 
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    distance[i][j] = g.getCostMatrix()[i][j];
-                    if (g.getCostMatrix()[i][j] != 0
-                            && g.getCostMatrix()[i][j] != INFINITE) {
-                        next[i][j] = j;
-                    }
-                }
-            }
-
-            //Algorithm Body 
-            for (int k = 0; k < n; k++) {
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < n; j++) {
-                        if (distance[i][j] > distance[i][k] + distance[k][j]) {
-                            distance[i][j] = distance[i][k] + distance[k][j];
-                            next[i][j] = next[i][k];    
-
-                        }
-                    }
-                }
-
-            }
-            return new Object[]{distance, next};
-        }
-
-        private Edge[] findPerfectMatch(LinkedList<Edge[]> matchings, int [][] distance) {
-
-            Edge[] bestMatching = null;
-            int bestCost = Integer.MAX_VALUE;
-
-            for (Edge[] match : matchings) {
-                int cost =0;
-                for (Edge edge : match) {
-                    cost += distance[edge.init][edge.end];
-                }
-                if(cost < bestCost){
-                    bestCost = cost;
-                    bestMatching = match;
-                }
-
-            }
-            return bestMatching;
-
-        }
-
-        ////Adds to matchings all matching  begin with  edgeSequence edges
-        //plus all matchings that can be generated with edges
-        private void addMatchings(LinkedList<Edge[]> matchings,
-                ArrayList<Edge> edges,
-                Edge[] edgesSequence,
-                int n) {
-
-            //Check if a sequence of edges(ex:(1,2)(0,3)) is already added as a match
-            //This also discarts isomorph matches ex: (1,2)(0,3) amd (0,3)(1,2)
-            if (edges.isEmpty()) {
-                List edgesSequenceCol = Arrays.asList(edgesSequence);
-
-                for (Edge[] match : matchings) {
-
-                    if (Arrays.asList(match).containsAll(edgesSequenceCol)) {
-                        return;
-                    }
-                }
-                matchings.add(Arrays.copyOf(edgesSequence, edgesSequence.length));
-            }
-
-            for (Edge edge1 : edges) {
-
-                ArrayList<Edge> newEdges = new ArrayList<>();
-                for (Edge edge2 : edges) {
-                    if (edge2.toltallyDiferent(edge1)) {
-                        newEdges.add(edge2);
-                    }
-                }
-
-                edgesSequence[edgesSequence.length - n] = edge1;
-                addMatchings(matchings, newEdges, edgesSequence, n - 1);
-
-            }
-        }
-
-        private  ArrayList<Edge> getAllEdges(HashSet<Integer> oddVertices) {
-
-            HashSet<Edge> edgesSet = new HashSet<>();
-
-            //Enumerates all graph edges
-            for (Integer v1 : oddVertices) {
-                for (Integer v2 : oddVertices) {
-
-                    if (v1 == v2) {
-                        continue;
-                    }
-
-                    if (!edgesSet.contains(new Edge(v1, v2))
-                            && !edgesSet.contains(new Edge(v2, v1))) {
-
-                        edgesSet.add(new Edge(v1, v2));
-
-                    }
-                }
-
-            }
-
-            return new ArrayList<>(edgesSet);
-
-        }
-        private int getCost(Edge[] edges, int[][] distance) {
-            int cost = 0;
-            for (Edge e: edges) {
-                cost += distance[e.init][e.end];
-            }
-            return cost;
-        }
-        public void Hierholzer(Graph graph, int aditionalCost) {
-            int totalCost = 0;
-            
-            for (int i = 0; i < graph.getOrder(); i++) {
-                for (int j = 0; j < graph.getOrder(); j++) {
-                    if(INFINITE != graph.getCostMatrix()[i][j])
-                        totalCost += graph.getCostMatrix()[i][j];
-                 }
-            }
-            System.out.println("Total Cost is: " + (totalCost/2 + aditionalCost));
-        }
-
-        //This class represents undirected edges
-        private class Edge {
-
-            public int init;
-            public int end;
-
-            public Edge(int init, int end) {
-                this.init = init;
-                this.end = end;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (!Edge.class.isInstance(obj)) {
-                    return false;
-                }
-
-                Edge edg = (Edge) obj;
-                return (edg.init == this.init && edg.end == this.end)
-                        || (edg.init == this.end && edg.end == this.init);
-
-            }
-
-            public boolean toltallyDiferent(Edge edge) {
-                //Returns if edges have no vertex in common
-                return ((this.init != edge.init)
-                        && (this.end != edge.end)
-                        && (this.init != edge.end)
-                        && (this.end != edge.init));
-            }
-
-            @Override
-            public int hashCode() {
-                int[] parameters = new int[]{init, end};
-                Arrays.sort(parameters);
-                return Objects.hash(parameters[0], parameters[1]);
-            }
-
-            @Override
-            public String toString() {
-                return "(" + Integer.toString(init)
-                        + "," + Integer.toString(end) + ")";
-            }
-
-        }
+        LinkedList<Integer> bestMatch = findPerfectMatch(matchings, distance);
+        System.out.println("Best Odd Vertices match: " + Arrays.toString(bestMatch.toArray()));
+        System.out.println("Match Cost: " + getCost(bestMatch, distance));
+        
+        Hierholzer(costMatrix, getCost(bestMatch, distance));
     }
+
+    public LinkedList<Integer> FindOddVertices(int[][] costMatrix) {
+
+        int n = costMatrix.length;
+        LinkedList<Integer> oddVertices = new LinkedList<>();
+
+        //Finds odd vertices
+        for (int i = 0; i < n; i++) {
+            int neighborsCount = 0;
+            for (int j = 0; j < n; j++) {
+                if ((costMatrix[i][j] != INFINITE)
+                        && (costMatrix[i][j] != 0)) {
+                    neighborsCount += 1;
+
+                }
+            }
+            if (neighborsCount % 2 != 0) {
+                oddVertices.add(i);
+            }
+        }
+        return oddVertices;
+
+    }
+
+    public Object[] FloydWarshall(int[][] costMatrix) {
+
+        int n = costMatrix.length;
+        int[][] distance = new int[n][n];
+        //Maybe do path calculation separately
+        int[][] next = new int[n][n];
+
+        //Initialization 
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                distance[i][j] = costMatrix[i][j];
+                if (costMatrix[i][j] != 0 && costMatrix[i][j] != INFINITE) {
+                    next[i][j] = j;
+                }
+            }
+        }
+
+        //Algorithm Body 
+        for (int k = 0; k < n; k++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (distance[i][j] > distance[i][k] + distance[k][j]) {
+                        distance[i][j] = distance[i][k] + distance[k][j];
+                        next[i][j] = next[i][k];
+
+                    }
+                }
+            }
+
+        }
+        return new Object[]{distance, next};
+    }
+
+    private void findAllMatchings(LinkedList<LinkedList<Integer>> matchings,
+            LinkedList<Integer> vertices,
+            LinkedList<Integer> visited) {
+
+        if(vertices.isEmpty()){
+            matchings.add(new LinkedList<>(visited));
+            return;
+        }
+        if (vertices.size() % 2 == 0) {
+            Integer visitVertice = vertices.getFirst();
+            LinkedList<Integer> remainingVertices = new LinkedList<>(vertices);
+            remainingVertices.remove(visitVertice);
+            visited.add(visitVertice);
+            findAllMatchings(matchings, remainingVertices, visited);
+            visited.removeLast();
+            
+        } else if (vertices.size() % 2 != 0) {
+
+            for (Integer visitVertice : vertices) {
+                LinkedList<Integer> remainingVertices = new LinkedList<>(vertices);
+                remainingVertices.remove(visitVertice);
+                visited.add(visitVertice);
+                findAllMatchings(matchings, remainingVertices, visited);
+                visited.removeLast();
+
+            }
+        }
+
+    }
+
+    private LinkedList<Integer> findPerfectMatch(LinkedList<LinkedList<Integer>> matchings, int[][] distance) {
+
+        LinkedList<Integer> bestMatching = null;
+        int bestCost = Integer.MAX_VALUE;
+
+        for (LinkedList<Integer> match : matchings) {
+            int cost = 0;
+            for (int i = 0; i < match.size() - 1; i+=2) {
+                cost += distance[match.get(i)][match.get(i+1)];
+            }
+            
+            if (cost < bestCost) {
+                bestCost = cost;
+                bestMatching = match;
+            }
+
+        }
+        return bestMatching;
+
+    }
+
+    private int getCost(LinkedList<Integer> bestMatch, int[][] distance) {
+        int cost = 0;
+        for (int i = 0; i < bestMatch.size() - 1; i += 2) {
+            cost += distance[bestMatch.get(i)][bestMatch.get(i + 1)];
+        }
+        return cost;
+    }
+
+    public void Hierholzer(int[][] costMatrix, int aditionalCost) {
+        int n = costMatrix.length;;
+        int totalCost = 0;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (INFINITE != costMatrix[i][j]) {
+                    totalCost += costMatrix[i][j];
+                }
+            }
+        }
+        System.out.println("Total Cost is: " + (totalCost / 2 + aditionalCost));
+    }
+
+}
