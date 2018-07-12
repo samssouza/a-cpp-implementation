@@ -1,38 +1,47 @@
 package chinese.postman;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Scanner;
-import javafx.util.Pair;
 
 public class MainClass {
 
     public static void main(String[] args) {
         int[][] costMatrix = ReadGraph();
-        new Solver().Solve(costMatrix);
-        
-        
+        Integer startV = readStartVertice(costMatrix.length-1);
+        System.out.println("Graph Order: " + String.valueOf(costMatrix.length));
+        new Solver().Solve(costMatrix, startV);
+       
     }
 
     public static int[][] ReadGraph() {
-        System.out.println("Type Cost Matrix ");
-        System.out.println("LEAVE lINE EMPTY AT ANY TIME TO STOP!!! ");
+        System.out.println("Type Cost Matrix. LEAVE lINE EMPTY AT ANY TIME TO STOP!!! ");
 
         Scanner scanner = new Scanner(System.in);
         ArrayList<String> lines = new ArrayList<>();
+        
+        //Skip white characters before matrix
+        scanner.skip("\\s*");
+        String line = scanner.nextLine();
+        int n = line.split("\\s+").length;
+        int linesCount = 0;
 
-        while (scanner.hasNextLine()) {
-            String reade = scanner.nextLine();
-            if (reade.matches("\\s*")) {
+        while (true) {
+            if (line.matches("\\s*")) 
+                break;
+            
+            if (!line.matches("(\\d+\\s+|\\-\\s+)+(\\d+\\s*|\\-\\s*)")
+                    || line.split("\\s+").length > n
+                    || linesCount > n) {
+
+                System.err.println("Matrix Does Not Match Pattern or Is Irregular...");
+                System.exit(0);
                 break;
             }
-            lines.add(reade);
-
+            linesCount += 1;
+            lines.add(line);
+            line = scanner.nextLine();
         }
-
-        int n = lines.size();
+        
         int[][] gCost = new int[n][n];
 
         for (int i = 0; i < n; i++) {
@@ -48,11 +57,21 @@ public class MainClass {
             }
         }
 
-        System.out.println("Number of vertices: " + String.valueOf(n));
-        System.out.print("Cost Matrix:\n" + Arrays.deepToString(gCost).replace('[', ' ').replace(',', ' ').replace(']', '\n'));
-
+        
         return gCost;
-
     }
-
+    public static int readStartVertice(int maxValue) {
+        System.out.print("Type Start Vertice: ");
+        Scanner scanner = new Scanner(System.in);
+        String line = scanner.nextLine();
+        line = line.replaceAll("\\s*", "");
+        
+        if(!line.matches("[0-9]+") || Integer.valueOf(line) > maxValue){
+            System.err.println("Start Vertice Invalid!");
+            System.exit(0);
+        
+        }
+            
+        return  Integer.valueOf(line);
+    }
 }
