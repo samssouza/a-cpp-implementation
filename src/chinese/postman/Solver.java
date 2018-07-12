@@ -8,7 +8,12 @@ public class Solver {
     public static int INFINITE = Integer.MAX_VALUE / 2;
 
     public void Solve(int[][] costMatrix, int startVertice) {
-
+        
+        if (!checkSymmetry(costMatrix)) {
+            System.err.println("Sorry, Implementation Cannot Solve Directed Graphs...");
+            System.exit(0);
+        }
+        System.out.println("Graph Order: " + String.valueOf(costMatrix.length));
         //Find odd vertices
         LinkedList<Integer> oddVertices = FindOddVertices(costMatrix);
         System.out.println("Odd Vertices: " + Arrays.toString(oddVertices.toArray()));
@@ -234,7 +239,19 @@ public class Solver {
         }
         return null;
     }
+    
+    public static boolean checkSymmetry(int[][] costMatrix) {
+        int n = costMatrix.length;
 
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (costMatrix[i][j] != costMatrix[j][i]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     //Floyd Warshall path reconstruction
     private LinkedList<Integer> getPath(Integer i, Integer j, int[][] next) {
         LinkedList<Integer> path = new LinkedList<>();

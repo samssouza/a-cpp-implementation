@@ -8,7 +8,6 @@ public class MainClass {
     public static void main(String[] args) {
         int[][] costMatrix = ReadGraph();
         Integer startV = readStartVertice(costMatrix.length-1);
-        System.out.println("Graph Order: " + String.valueOf(costMatrix.length));
         new Solver().Solve(costMatrix, startV);
        
     }
@@ -74,4 +73,7 @@ public class MainClass {
             
         return  Integer.valueOf(line);
     }
+    
+    
+    
 }
